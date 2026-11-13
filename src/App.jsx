@@ -1,60 +1,36 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
 
-
-
-
-function TopBar() {
-  return (
-    <div className="top-bar">
-      <div>📍 Wandoor - Pallikunnu Pin 679328</div>
-      <div>☎ +91 944 635 6432</div>
-      <div>✉ arokyahomoeopathywdr@gmail.com</div>
-      <div>f  ♥  ◎  G  in</div>
-    </div>
-  )
-}
-
-function Navbar() {
-  return (
-    <nav className="navbar">
-      <div className="logo">
-        <h1>arokya</h1>
-        <span>HOMOEOPATHY</span>
-      </div>
-
-      <div className="nav-links">
-        <a href="#">HOME</a>
-        <a href="#">ABOUT US</a>
-        <a href="#">SERVICE</a>
-        <a href="#">BLOG</a>
-        <a href="#">CONTACT</a>
-      </div>
-
-      <button className="book-btn">BOOK NOW</button>
-    </nav>
-  )
-}
-
-function Header() {
-  return (
-    <header>
-      <TopBar />
-      <Navbar />
-    </header>
-  )
-}
+import { useEffect, useState } from 'react'
+import { supabase } from './supabaseClient'
+import Login from './Login'
+import Dashboard from './Dashboard'
 
 function App() {
-  return (
-    <div>
-      <Header />
-    </div>
-  )
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setLoading(false)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (loading) {
+    return <p style={{ textAlign: 'center', marginTop: '100px' }}>
+      Loading...
+    </p>
+  }
+
+  return session ? <Dashboard session={session} /> : <Login />
 }
 
 export default App
-
